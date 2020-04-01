@@ -19,10 +19,10 @@ Gloo makes it easy to implement tracing on your system through [Envoy's tracing 
 
 #### Configuration
 
-- There are two steps to make tracing available through Gloo:
-  1. Gloo specify a trace provider in the bootstrap config.
-  1. Enable tracing on the listener.
-  1. (Optional) Annotate routes with descriptors.
+There are two steps to make tracing available through Gloo:
+1. Specify a trace provider in the bootstrap config
+1. Enable tracing on the listener
+1. (Optional) Annotate routes with descriptors
 
 ##### 1. Specify a tracing provider in the bootstrap config
 
@@ -32,14 +32,14 @@ We describe both methods below.
 
 Several tracing providers are supported.
 You can choose any that is supported by Envoy.
-For a list of supported tracing providers and the configuration that they expect, please see Envoy's documentation on [trace provider configuration](https://www.envoyproxy.io/docs/envoy/v1.9.0/api-v2/config/trace/v2/trace.proto#config-trace-v2-tracing-http).
+For a list of supported tracing providers and the configuration that they expect, please see Envoy's documentation on [trace provider configuration](https://www.envoyproxy.io/docs/envoy/v1.13.1/api-v2/config/trace/v2/trace.proto#config-trace-v2-tracing-http).
 For demonstration purposes, we show how to specify the helm values for a *zipkin* trace provider below.
 
 Note: some tracing providers, such as Zipkin, require a `collector_cluster` (the cluster which collects the traces) to be specified in the bootstrap config. If your provider requires a cluster to be specified, you can provide it in the config, as shown below. If your provider does not require a cluster you should omit that field. 
 
 **Option 1: Set the trace provider through helm values:**
 
-{{< highlight yaml "hl_lines=3-23" >}}
+{{< highlight yaml "hl_lines=3-24" >}}
 gatewayProxies:
   gatewayProxy:
     tracing:
@@ -49,6 +49,7 @@ gatewayProxies:
           "@type": "type.googleapis.com/envoy.config.trace.v2.ZipkinConfig"
           collector_cluster: zipkin
           collector_endpoint: "/api/v1/spans"
+          collector_endpoint_version: HTTP_JSON
       cluster:
         - name: zipkin
           connect_timeout: 1s
@@ -76,7 +77,7 @@ kubectl edit configmap -n gloo-system gateway-proxy-envoy-config
 ```
 Apply the tracing provider changes. A sample Zipkin configuration is shown below.
 
-{{< highlight yaml "hl_lines=4-10 33-45">}}
+{{< highlight yaml "hl_lines=5-12 34-46">}}
 apiVersion: v1
 kind: ConfigMap
 data:
@@ -88,6 +89,7 @@ data:
           "@type": "type.googleapis.com/envoy.config.trace.v2.ZipkinConfig"
           collector_cluster: xds_cluster
           collector_endpoint: "/api/v1/spans"
+          collector_endpoint_version: HTTP_JSON
     node:
       cluster: gateway
       id: "{{.PodName}}{{.PodNamespace}}"
